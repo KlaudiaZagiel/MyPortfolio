@@ -1,0 +1,182 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: 'Merriweather';
+    src: url(../fonts/static/Merriweather_120pt-Regular.ttf);
+    font-style: normal;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'Nunito';
+    src: url(../fonts/static/Nunito-Regular.ttf);
+    font-style: normal;
+    font-weight: 400;
+}
+
+body {
+    /* background-color: #b48868; */
+    background: white;
+    font-family: 'Nunito';
+    font-size: 18px;
+
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-right: 60px;
+    height: 100px;
+}
+
+.links {
+    font-weight: 700;
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    cursor: pointer;
+}
+
+.links li {
+    display: flex;
+    align-items: center;
+}
+
+.links a {
+    text-decoration: none;
+    color: black;
+}
+
+.links li:hover {
+    text-decoration: underline
+}
+
+.loginButton,
+.loginButton * {
+    text-decoration: none !important;
+}
+
+.loginButton {
+    color: black;
+    padding: 10px;
+    width: 80px;
+    text-align: center;
+    border-radius: 4px;
+}
+
+.loginButton:hover {
+    transform: translateY(-3px);
+}
+
+.kzLogo {
+    width: 150px;
+}
+
+.introductionContainer {
+    background: linear-gradient(-45deg, #c8b6a6, #8d7b68, #a4907c, #e9e0ca);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    padding: 80px;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 80%;
+    }
+
+    50% {
+        background-position: 100% 90%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+h1 {
+    margin-bottom: 16px;
+    font-size: 35px;
+    font-weight: 700;
+    font-family: 'Merriweather';
+}
+
+.welcomeBlock {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 40px 48px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    max-width: 650px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.shortIntro {
+    line-height: 1.7;
+    margin: 20px 0;
+    font-size: 18px;
+}
+
+.myPhoto {
+    height: 400px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.welcomeText {
+    margin-left: 50px;
+}
+
+.welcomeText a {
+    text-decoration: none;
+    color: black;
+    font-weight: 700;
+}
+
+.welcomeText a:hover {
+    text-decoration: underline;
+}
+
+.timeline {
+    display: flex;
+    justify-content: space-between;
+    margin: 80px auto;
+    max-width: 700px;
+    border-top: 3px solid #8d7b68;
+    padding-top: 40px;
+}
+
+.timelineItem {
+    text-align: center;
+    position: relative;
+    line-height: 1.7;
+}
+
+.timelineItem::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background: #8d7b68;
+    border-radius: 50%;
+    position: absolute;
+    top: -47px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.educationContainer {
+    text-align: center;
+    margin-top: 60px;
+}
+
+h2 {
+    font-size: 40px;
+    font-family: 'Merriweather';
+}
