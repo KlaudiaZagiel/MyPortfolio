@@ -1,0 +1,122 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@font-face {
+    font-family: 'Merriweather';
+    src: url(../fonts/static/Merriweather_120pt-Regular.ttf);
+    font-style: normal;
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'Nunito';
+    src: url(../fonts/static/Nunito-Regular.ttf);
+    font-style: normal;
+    font-weight: 400;
+}
+
+body {
+    background: white;
+    font-family: 'Nunito';
+    font-size: 18px;
+
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-right: 60px;
+    height: 100px;
+}
+
+.links {
+    font-weight: 700;
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    cursor: pointer;
+}
+
+.links li {
+    display: flex;
+    align-items: center;
+}
+
+.links a {
+    text-decoration: none;
+    color: black;
+}
+
+.links li:hover {
+    text-decoration: underline
+}
+
+.kzLogo {
+    width: 150px;
+}
+
+.loginContainer {
+    background: linear-gradient(-45deg, #c8b6a6, #8d7b68, #a4907c, #e9e0ca);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+    height: 600px;
+    justify-content: center;
+    align-self: center;
+    display: flex;
+    padding-top: 70px;
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 80%;
+    }
+
+    50% {
+        background-position: 100% 90%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.loginForm {
+    display: flex;
+    background-color: white;
+    height: 400px;
+    width: 600px;
+    padding: 20px;
+    border-radius: 4px;
+    flex-direction: column;
+    gap: 15px;
+}
+
+h1 {
+    justify-content: center;
+    align-self: center;
+}
+
+.userInput {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+
+.loginForm button {
+    width: 180px;
+    height: 40px;
+    border-radius: 4px;
+    border: none;
+    margin-top: 50px;
+    align-self: center;
+    justify-content: center;
+    font-family: 'Nunito';
+    font-size: 16px;
+    font-weight: 600;
+}
