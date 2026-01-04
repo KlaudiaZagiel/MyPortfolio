@@ -160,3 +160,25 @@ h1 {
 .uploadButton:hover {
     transform: translateY(-3px);
 }
+
+.uploadMessage {
+    margin-top: 15px;
+    padding: 12px;
+    max-width: 100%;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.upload-details p {
+    margin: 4px 0;
+}
+
+.upload-details strong {
+    display: inline-block;
+    min-width: 160px;
+
+}

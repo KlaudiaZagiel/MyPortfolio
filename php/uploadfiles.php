@@ -7,21 +7,22 @@ $fileSize = (3 * 1024 * 1024); //3Mb
 
 if ($_FILES["uploadedFile"]["error"] == 0) {
 
-    if ($_FILES["uploadedFile"]["size"] < $fileSize) {
+    if ($_FILES["uploadedFile"]["size"] < $fileSize) {   //uploadedFile comes from my html input name ''uploadedFile''
         $acceptedFileTypes = ["image/gif", "image/jpg", "image/jpeg"];
 
         $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
         $uploadedFileType = finfo_file($fileinfo, $_FILES["uploadedFile"]["tmp_name"]);
 
         if (in_array($uploadedFileType, $acceptedFileTypes)) {
-            if (!file_exists("upload/" . $_FILES["uploadedFile"]["name"])) { //prevent overwiting existing file. if there is file like that, stop upload
+            if (!file_exists("upload/" . $_FILES["uploadedFile"]["name"])) { //prevent overwiting existing file. if there is already file like that, stop upload
 
-                if (move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], "upload/" . $_FILES["uploadedFile"]["name"])) {
+                if (move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], "upload/" . $_FILES["uploadedFile"]["name"])) { //move uploaded file to "upload/" folder
                     echo "Upload: " . $_FILES["uploadedFile"]["name"] . "<br />";
                     echo "Type: " . $uploadedFileType . "<br />";
                     echo "Size: " . ($_FILES["uploadedFile"]["size"] / 1024) . "Kb<br />";
                     echo "Stored temporarily in: " . $_FILES["uploadedFile"]["tmp_name"] . "<br />";
                     echo "Stored permanently in: " . "upload/" . $_FILES["uploadedFile"]["name"];
+                    echo "<p><strong>Uploaded file:</strong> " . htmlspecialchars($_FILES["uploadedFile"]["name"]) . "</p>";
                 } else {
                     echo "Something went wrong while uploading.";
                 }
