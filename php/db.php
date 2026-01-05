@@ -1,4 +1,3 @@
-
 <?php
 $dbHandler = null;
 try {
@@ -9,7 +8,6 @@ try {
 
 function printError(String $err)
 {
-    echo "<h1>The following error occured</h1>
-          <p>{$err}</p>";
+
     exit;
 }

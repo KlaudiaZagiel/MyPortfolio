@@ -1,38 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+session_start();
+$msg = [];
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="../css/login.css">
-</head>
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-<body>
-    <header class="header">
-        <a href="../html/myportfolio.html"><img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo"></a>
-        <ul class="links">
-            <li><a href="myfiles.php">My files</a></li>
-            <li>About me</li>
-        </ul>
-    </header>
-    <div class="loginContainer">
-        <form class="loginForm">
-            <h1>Login</h1>
+    if (!$email = filter_input(INPUT_POST, "email", FILTER_SANITIZE_EMAIL)) {
+        $msg[] = "Invalid e-mail address.";
+    }
 
-            <div class="userInput">
-                <label for="email">E-mail</label>
-                <input type="email" name="email" id="email">
-            </div>
+    if (!$pass = filter_input(INPUT_POST, "password")) {
+        $msg[] = "Please provide a password";
+    }
 
-            <div class="userInput">
-                <label for="password">Password</label>
-                <input type="password" name="password" id="password">
-            </div>
+    if (count($msg) == 0) {
 
-            <button type="submit">Login</button>
-        </form>
-    </div>
-</body>
+        require_once("db.php");
 
-</html>
+        if ($dbHandler) {
+            try {
+
+                $stmt = $dbHandler->prepare(
+                    "SELECT id, password_hash, role
+                    FROM users
+                    WHERE email = :email"
+                );
+
+                $stmt->bindParam(":email", $email,  PDO::PARAM_STR);
+                $stmt->execute();
+            } catch (Exception $ex) {
+                printError($ex);
+            }
+        }
+
+        if ($stmt && $stmt->rowCount() == 1) {
+            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (password_verify($pass, $results[0]["password_hash"])) {
+
+
+
+                $_SESSION["user_id"] = $results[0]["id"];
+                $_SESSION["role"] = $results[0]["role"];
+
+                header("Location: ../html/myportfolio.html");
+                exit;
+            }
+        } else {
+            $msg[] = "Invalid e-mail or password.";
+        }
+    }
+}

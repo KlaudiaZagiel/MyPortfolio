@@ -58,7 +58,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
         <a href="../html/myportfolio.html"><img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo"></a>
         <ul class="links">
             <li>About me</li>
-            <li class="loginButton">Log in</li>
+            <li class="loginButton">
+                <a href="../php/login.php">Log in</a>
+            </li>
         </ul>
     </header>
 
