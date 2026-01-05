@@ -10,9 +10,9 @@
 
 <body>
     <header class="header">
-        <a href="myportfolio.html"><img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo"></a>
+        <a href="../html/myportfolio.html"><img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo"></a>
         <ul class="links">
-            <li><a href="myfiles.html">My files</a></li>
+            <li><a href="myfiles.php">My files</a></li>
             <li>About me</li>
         </ul>
     </header>
