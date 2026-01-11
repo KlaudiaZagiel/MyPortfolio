@@ -68,6 +68,7 @@ body {
     width: 80px;
     text-align: center;
     border-radius: 4px;
+    white-space: nowrap;
 }
 
 .loginButton:hover {

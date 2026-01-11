@@ -1,4 +1,11 @@
 <?php
+session_start();
+
+if (!isset($_SESSION["user_id"])) {
+    header("Location: ../html/login.html");
+    exit;
+}
+
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
@@ -55,12 +62,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
 
 <body>
     <header class="header">
-        <a href="../html/myportfolio.html"><img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo"></a>
+        <a href="../php/myportfolio.php"><img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo"></a>
         <ul class="links">
             <li>About me</li>
-            <li class="loginButton">
-                <a href="../php/login.php">Log in</a>
-            </li>
+            <?php if (isset($_SESSION["user_id"])): ?>
+                <li class="loginButton">
+                    <a href="../php/logout.php">Log out</a>
+                </li>
+            <?php else: ?>
+                <li class="loginButton">
+                    <a href="../html/login.html">Log in</a>
+                </li>
+            <?php endif; ?>
         </ul>
     </header>
 

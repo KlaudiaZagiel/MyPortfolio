@@ -1,3 +1,7 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,9 +18,15 @@
         <ul class="links">
             <li><a href="../php/myfiles.php">My files</a></li>
             <li>About me</li>
-            <a href="../html/login.html">
-                <li class="loginButton">Log in</li>
-            </a>
+            <?php if (isset($_SESSION["user_id"])): ?>
+                <li class="loginButton">
+                    <a href="../php/logout.php">Log out</a>
+                </li>
+            <?php else: ?>
+                <li class="loginButton">
+                    <a href="../html/login.html">Log in</a>
+                </li>
+            <?php endif; ?>
         </ul>
     </header>
     <div class="introductionContainer">

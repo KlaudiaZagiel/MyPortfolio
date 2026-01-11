@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $_SESSION["user_id"] = $results[0]["id"];
                 $_SESSION["role"] = $results[0]["role"];
 
-                header("Location: ../html/myportfolio.html");
+                header("Location: ../php/myportfolio.php");
                 exit;
             }
         } else {
