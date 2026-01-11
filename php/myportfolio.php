@@ -16,7 +16,15 @@ session_start();
     <header class="header">
         <img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo">
         <ul class="links">
-            <li><a href="../php/myfiles.php">My files</a></li>
+
+            <?php if (isset($_SESSION["user_id"])): ?>
+                <?php if ($_SESSION["role"] === "admin"): ?>
+                    <li><a href="../php/myfiles.php">My files</a></li>
+                <?php else: ?>
+                    <li><a href="../php/files.php">My files</a></li>
+                <?php endif; ?>
+            <?php endif; ?>
+
             <li>About me</li>
             <?php if (isset($_SESSION["user_id"])): ?>
                 <li class="loginButton">

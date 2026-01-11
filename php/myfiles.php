@@ -6,6 +6,24 @@ if (!isset($_SESSION["user_id"])) {
     exit;
 }
 
+if ($_SESSION["role"] !== "admin") {
+    exit("You don't have permission to upload files.");
+}
+
+require_once "db.php";
+if (!$dbHandler) {
+    try {
+        $dbHandler = new PDO(
+            "mysql:host=localhost;dbname=portfoliousers;charset=utf8",
+            "root",
+            "qwerty"
+        );
+        $dbHandler->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e) {
+        die("Database connection failed: " . $e->getMessage());
+    }
+}
+
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
@@ -23,6 +41,34 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
                 if (!file_exists("upload/" . $_FILES["uploadedFile"]["name"])) { //prevent overwiting existing file. if there is already file like that, stop upload
 
                     if (move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], "upload/" . $_FILES["uploadedFile"]["name"])) { //move uploaded file to "upload/" folder
+
+                        $stmt = $dbHandler->prepare(
+                            "INSERT INTO files (filename, title, description, uploaded_by)
+                    VALUES (:filename, :title, :description, :user)"
+                        );
+
+                        $stmt->execute([
+                            ":filename" => $_FILES["uploadedFile"]["name"],
+                            ":title" => $_POST["title"],
+                            ":description" => $_POST["description"],
+                            ":user" => $_SESSION["user_id"]
+                        ]);
+
+                        $fileId = $dbHandler->lastInsertId();
+
+                        if (!empty($_POST["access"])) {
+                            foreach ($_POST["access"] as $visitorId) {
+                                $stmt = $dbHandler->prepare(
+                                    "INSERT INTO file_access (file_id, user_id)
+                                    VALUES (:file, :user)"
+                                );
+                                $stmt->execute([
+                                    ":file" => $fileId,
+                                    ":user" => $visitorId
+                                ]);
+                            }
+                        }
+
                         $message = "<div class='upload-details'>";
                         $message .= "<p><strong>Upload: </strong> " . $_FILES["uploadedFile"]["name"] . "<br />";
                         $message .= "<p><strong>Type: </strong> " . $uploadedFileType . "<br />";
@@ -82,8 +128,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
             <h1>Upload your files</h1>
             <!--ENCTYPE-->
             <form action="myfiles.php" method="post" enctype="multipart/form-data" class="uploadForm">
+
+                <input type="text" name="title" placeholder="File title" required>
+                <textarea name="description" placeholder="Description"></textarea>
+
                 <label for="file" class="choosefileLabel">Choose your file</label>
-                <input type="file" name="uploadedFile" id="file" />
+                <input type="file" name="uploadedFile" id="file" required>
+
+                <div class="accessBox">
+                    <h2>Who's viewing the file?</h2>
+
+                    <label class="accessOption">
+                        <input type="checkbox" name="access[]" value="2">
+                        Teacher
+                    </label>
+
+                    <label>
+                        <input type="checkbox" name="access[]" value="3">
+                        Supervisor
+                    </label>
+                </div>
+
                 <button type="submit" class="uploadButton">Upload</button>
             </form>
             <?php echo $message; ?>

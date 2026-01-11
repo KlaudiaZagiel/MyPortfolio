@@ -19,7 +19,6 @@
 }
 
 body {
-    /* background-color: #b48868; */
     background: white;
     font-family: 'Nunito';
     font-size: 18px;
@@ -71,6 +70,20 @@ body {
     white-space: nowrap;
 }
 
+@keyframes gradient {
+    0% {
+        background-position: 0% 80%;
+    }
+
+    50% {
+        background-position: 100% 90%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .loginButton:hover {
     transform: translateY(-3px);
 }
@@ -86,19 +99,6 @@ body {
     padding: 80px;
 }
 
-@keyframes gradient {
-    0% {
-        background-position: 0% 80%;
-    }
-
-    50% {
-        background-position: 100% 90%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
 
 .fileuploadBox {
     background: rgba(255, 255, 255, 0.6);
@@ -111,85 +111,4 @@ body {
     display: flex;
     align-items: center;
     box-sizing: border-box;
-}
-
-.uploadForm {
-    padding: 40px;
-}
-
-#file {
-    display: none;
-}
-
-.choosefileLabel {
-    display: inline-block;
-    width: 150px;
-    padding: 15px 20px;
-    background-color: #3b3030;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    margin-bottom: 15px;
-    border: none;
-}
-
-.choosefileLabel:hover {
-    transform: translateY(-3px);
-}
-
-h1 {
-    margin-bottom: 16px;
-    font-size: 35px;
-    font-weight: 700;
-    font-family: 'Merriweather';
-}
-
-.uploadButton {
-    display: inline-block;
-    width: 150px;
-    padding: 15px 20px;
-    background-color: #3b3030;
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    margin-top: 30px;
-    border: none;
-}
-
-.uploadButton:hover {
-    transform: translateY(-3px);
-}
-
-.uploadMessage {
-    margin-top: 15px;
-    padding: 12px;
-    max-width: 100%;
-    background-color: rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    font-size: 14px;
-    line-height: 1.4;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-.upload-details p {
-    margin: 4px 0;
-}
-
-.upload-details strong {
-    display: inline-block;
-    min-width: 160px;
-
-}
-
-.accessBox {
-    margin-top: 20px;
-}
-
-.accessOption {
-    display: block;
-    margin: 8px 0;
-    font-size: 16px;
 }
