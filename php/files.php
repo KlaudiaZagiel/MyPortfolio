@@ -65,19 +65,26 @@ $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="fileuploadContainer">
         <div class="fileuploadBox">
-            <?php if (empty($files)): ?>
+            <?php if (empty($files)) {
+            ?>
                 <p>No files available.</p>
-            <?php endif; ?>
+            <?php
+            }
 
-            <?php foreach ($files as $file): ?>
+            foreach ($files as $file) {
+
+            ?>
                 <div class="fileCard">
                     <h3><?= htmlspecialchars($file["title"]) ?></h3>
                     <p><?= htmlspecialchars($file["description"]) ?></p>
                     <a href="viewfile.php?id=<?= $file["id"] ?>">View file</a>
                 </div>
+            <?php
+            }
+            ?>
         </div>
     </div>
-<?php endforeach; ?>
+
 
 </body>
 

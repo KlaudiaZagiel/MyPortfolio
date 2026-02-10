@@ -24,77 +24,171 @@ if (!$dbHandler) {
     }
 }
 
+$stmt = $dbHandler->prepare("SELECT id, email FROM users WHERE role != 'admin'");
+$stmt->execute();
+$visitors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$stmt = $dbHandler->prepare("SELECT id, name FROM modules");
+$stmt->execute();
+$modules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
-    $fileSize = (3 * 1024 * 1024); //3Mb
+    $maxSize = 3 * 1024 * 1024;
 
-    if ($_FILES["uploadedFile"]["error"] == 0) {
+    $title = filter_input(INPUT_POST, "title", FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $description = filter_input(INPUT_POST, "description", FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $moduleId = filter_input(INPUT_POST, "module_id", FILTER_VALIDATE_INT);
 
-        if ($_FILES["uploadedFile"]["size"] < $fileSize) {   //uploadedFile comes from my html input name ''uploadedFile''
-            $acceptedFileTypes = ["image/gif", "image/jpg", "image/jpeg"];
+    if (!$moduleId) {
+        $message = "Please select a module";
+    } else {
 
-            $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
-            $uploadedFileType = finfo_file($fileinfo, $_FILES["uploadedFile"]["tmp_name"]);
+        $allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ];
 
-            if (in_array($uploadedFileType, $acceptedFileTypes)) {
-                if (!file_exists("upload/" . $_FILES["uploadedFile"]["name"])) { //prevent overwiting existing file. if there is already file like that, stop upload
+        $fileError = $_FILES["uploadedFile"]["error"];
+        $fileSize  = $_FILES["uploadedFile"]["size"];
+        $fileTmp   = $_FILES["uploadedFile"]["tmp_name"];
+        $fileName  = $_FILES["uploadedFile"]["name"];
 
-                    if (move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], "upload/" . $_FILES["uploadedFile"]["name"])) { //move uploaded file to "upload/" folder
+        if ($fileError !== 0) {
+            $message = "Upload error.";
+        } elseif ($fileSize > $maxSize) {
+            $message = "File too large (max 3MB).";
+        } else {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeType = finfo_file($finfo, $fileTmp);
+            if (!in_array($mimeType, $allowedTypes)) {
+                $message = "Invalid file type. Allowed: PDF, Word, Excel";
+            } else {
+
+                if (!file_exists("upload/" . $fileName)) {
+
+                    if (move_uploaded_file($fileTmp, "upload/" . $fileName)) {
 
                         $stmt = $dbHandler->prepare(
-                            "INSERT INTO files (filename, title, description, uploaded_by)
-                    VALUES (:filename, :title, :description, :user)"
+                            "INSERT INTO files (filename, title, description, uploaded_by, module_id)
+                         VALUES (:filename, :title, :description, :user, :module)"
                         );
 
-                        $stmt->execute([
-                            ":filename" => $_FILES["uploadedFile"]["name"],
-                            ":title" => $_POST["title"],
-                            ":description" => $_POST["description"],
-                            ":user" => $_SESSION["user_id"]
-                        ]);
+                        $stmt->bindParam(":filename", $fileName, PDO::PARAM_STR);
+                        $stmt->bindParam(":title", $title, PDO::PARAM_STR);
+                        $stmt->bindParam(":description", $description, PDO::PARAM_STR);
+                        $stmt->bindParam(":user", $_SESSION["user_id"], PDO::PARAM_INT); //who uploaded file?
+                        $stmt->bindParam(":module", $moduleId, PDO::PARAM_INT);
 
+                        $stmt->execute();
                         $fileId = $dbHandler->lastInsertId();
 
                         if (!empty($_POST["access"])) {
                             foreach ($_POST["access"] as $visitorId) {
                                 $stmt = $dbHandler->prepare(
                                     "INSERT INTO file_access (file_id, user_id)
-                                    VALUES (:file, :user)"
+                                 VALUES (:file, :user)"
                                 );
-                                $stmt->execute([
-                                    ":file" => $fileId,
-                                    ":user" => $visitorId
-                                ]);
+                                $stmt->bindParam(":file", $fileId, PDO::PARAM_INT);
+                                $stmt->bindParam(":user", $visitorId, PDO::PARAM_INT);
+                                $stmt->execute();
                             }
                         }
 
-                        $message = "<div class='upload-details'>";
-                        $message .= "<p><strong>Upload: </strong> " . $_FILES["uploadedFile"]["name"] . "<br />";
-                        $message .= "<p><strong>Type: </strong> " . $uploadedFileType . "<br />";
-                        $message .= "<p><strong> Size: </strong> " . ($_FILES["uploadedFile"]["size"] / 1024) . "Kb<br />";
-                        $message .= "<p><strong> Stored temporarily in: </strong> " . $_FILES["uploadedFile"]["tmp_name"] . "<br />";
-                        $message .= "<p><strong> Stored permanently in: </strong> " . "upload/" . $_FILES["uploadedFile"]["name"];
-                        $message .= "<p><strong>Uploaded file:</strong> " . htmlspecialchars($_FILES["uploadedFile"]["name"]) . "</p>";
-                        $message .= "</div>";
+                        $message = "File uploaded successfully.";
                     } else {
-                        $message .= "Something went wrong while uploading.";
+                        $message = "Could not move uploaded file.";
                     }
                 } else {
-                    $message .= $_FILES["uploadedFile"]["name"] . " already exsists. ";
+                    $message = "File already exists.";
                 }
-            } else {
-                $message .= "Invalid file type. File type must be: gif, jpg or jpeg.";
             }
-        } else {
-            $message .= "Invalid file size. File size must be less than " . $fileSize / 1024 / 1024 . "Mb.";
         }
-    } else {
-        $message .= "Error: " . $_FILES["uploadedFile"]["error"] . "<br />";
-        $message .= "See <a href='https://www.php.net/manual/en/features.file-upload.errors.php' target='_BLANK'>PHP.net</a> for the explanation of the error messages.";
     }
 }
 ?>
+
+<!-- // $message = "";
+
+// if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
+// $fileSize = (3 * 1024 * 1024); //3Mb
+
+// if ($_FILES["uploadedFile"]["error"] == 0) {
+
+// if ($_FILES["uploadedFile"]["size"] < $fileSize) { //uploadedFile comes from my html input name '' uploadedFile''
+    // $acceptedFileTypes=["image/gif", "image/jpg" , "image/jpeg" , "application/pdf" , "application/msword" , "application/vnd.ms-excel" , "application/vnd.ms-powerpoint" ];
+
+    // $fileinfo=finfo_open(FILEINFO_MIME_TYPE);
+    // $uploadedFileType=finfo_file($fileinfo, $_FILES["uploadedFile"]["tmp_name"]);
+
+    // if (in_array($uploadedFileType, $acceptedFileTypes)) {
+    // if (!file_exists("upload/" . $_FILES["uploadedFile"]["name"])) { //prevent overwiting existing file. if there is already file like that, stop upload
+
+    // if (move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], "upload/" . $_FILES["uploadedFile"]["name"])) { //move uploaded file to "upload/" folder
+
+    // $stmt=$dbHandler->prepare(
+    // "INSERT INTO files (filename, title, description, uploaded_by)
+    // VALUES (:filename, :title, :description, :user)"
+    // );
+
+    // $stmt->execute([
+    // ":filename" => $_FILES["uploadedFile"]["name"],
+    // ":title" => $_POST["title"],
+    // ":description" => $_POST["description"],
+    // ":user" => $_SESSION["user_id"]
+    // ]);
+
+    // $fileId = $dbHandler->lastInsertId();
+
+    // if (!empty($_POST["access"])) {
+    // foreach ($_POST["access"] as $visitorId) {
+    // $stmt = $dbHandler->prepare(
+    // "INSERT INTO file_access (file_id, user_id)
+    // VALUES (:file, :user)"
+    // );
+    // $stmt->execute([
+    // ":file" => $fileId,
+    // ":user" => $visitorId
+    // ]);
+    // }
+    // }
+
+    // $message = "<div class='upload-details'>";
+        // $message .= "<p><strong>Upload: </strong> " . $_FILES["uploadedFile"]["name"] . "<br />";
+            // $message .= "
+        <p><strong>Type: </strong> " . $uploadedFileType . "<br />";
+            // $message .= "
+        <p><strong> Size: </strong> " . ($_FILES["uploadedFile"]["size"] / 1024) . "Kb<br />";
+            // $message .= "
+        <p><strong> Stored temporarily in: </strong> " . $_FILES["uploadedFile"]["tmp_name"] . "<br />";
+            // $message .= "
+        <p><strong> Stored permanently in: </strong> " . "upload/" . $_FILES["uploadedFile"]["name"];
+            // $message .= "
+        <p><strong>Uploaded file:</strong> " . htmlspecialchars($_FILES["uploadedFile"]["name"]) . "</p>";
+        // $message .= "
+    </div>";
+    // } else {
+    // $message .= "Something went wrong while uploading.";
+    // }
+    // } else {
+    // $message .= $_FILES["uploadedFile"]["name"] . " already exsists. ";
+    // }
+    // } else {
+    // $message .= "Invalid file type. File type must be: gif, jpg or jpeg.";
+    // }
+    // } else {
+    // $message .= "Invalid file size. File size must be less than " . $fileSize / 1024 / 1024 . "Mb.";
+    // }
+    // } else {
+    // $message .= "Error: " . $_FILES["uploadedFile"]["error"] . "<br />";
+    // $message .= "See <a href='https://www.php.net/manual/en/features.file-upload.errors.php' target='_BLANK'>PHP.net</a> for the explanation of the error messages.";
+    // }
+    // }
+    // ?>  -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -111,15 +205,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
         <a href="../php/myportfolio.php"><img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo"></a>
         <ul class="links">
             <li>About me</li>
-            <?php if (isset($_SESSION["user_id"])): ?>
+            <?php if (isset($_SESSION["user_id"])) {
+            ?>
                 <li class="loginButton">
                     <a href="../php/logout.php">Log out</a>
                 </li>
-            <?php else: ?>
+            <?php
+            } else {
+            ?>
                 <li class="loginButton">
                     <a href="../html/login.html">Log in</a>
                 </li>
-            <?php endif; ?>
+            <?php
+            }
+            ?>
         </ul>
     </header>
 
@@ -137,16 +236,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
 
                 <div class="accessBox">
                     <h2>Who's viewing the file?</h2>
+                    <?php foreach ($visitors as $visitor) {
+                    ?>
+                        <label>
+                            <input type="checkbox" name="access[]" value=<?php echo $visitor['id']; ?>">
+                            <?php echo $visitor['email']; ?>
+                        </label>
+                    <?php
+                    }
+                    ?>
+                </div>
 
-                    <label class="accessOption">
-                        <input type="checkbox" name="access[]" value="2">
-                        Teacher
-                    </label>
+                <div class="moduleBox">
+                    <h2>Select module</h2>
 
-                    <label>
-                        <input type="checkbox" name="access[]" value="3">
-                        Supervisor
-                    </label>
+                    <select name="module_id" required>
+                        <option value="">-- Choose module --</option>
+                        <?php foreach ($modules as $module) { ?>
+                            <option value="<?php echo $module['id']; ?>">
+                                <?php echo $module['name']; ?>
+                            </option>
+                        <?php } ?>
+                    </select>
                 </div>
 
                 <button type="submit" class="uploadButton">Upload</button>
