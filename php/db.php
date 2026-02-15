@@ -5,11 +5,5 @@ try {
 
     $dbHandler->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (Exception $ex) {
-    printError($ex);
-}
-
-function printError(String $err)
-{
-
-    exit;
+    exit("Database connection failed");
 }

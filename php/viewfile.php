@@ -25,6 +25,7 @@ $userId = $_SESSION["user_id"];
 $role   = $_SESSION["role"];
 
 
+//view file - admin sees everything, teacher depending on an access//
 if ($role === "admin") {
     $stmt = $dbHandler->prepare(
         "SELECT * FROM files WHERE id = :id"
@@ -33,11 +34,12 @@ if ($role === "admin") {
 } else {
 
     $stmt = $dbHandler->prepare(
-        "SELECT f.*
-         FROM files f
-         JOIN file_access fa ON f.id = fa.file_id
-         WHERE f.id = :file
-         AND fa.user_id = :user"
+        "SELECT files.*
+         FROM files 
+         INNER JOIN file_access
+         ON files.id = file_access.file_id
+         WHERE files.id = :file
+         AND file_access.user_id = :user"
     );
     $stmt->execute([
         ":file" => $fileId,
@@ -57,6 +59,7 @@ if (!file_exists($filePath)) {
     exit("File not found on server.");
 }
 
+//send this file to the browser so user can see it//
 header("Content-Type: " . mime_content_type($filePath));
 readfile($filePath);
 exit;

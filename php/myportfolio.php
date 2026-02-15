@@ -17,24 +17,36 @@ session_start();
         <img src="../images/kzlogo.png" alt="kzLogo" class="kzLogo">
         <ul class="links">
 
-            <?php if (isset($_SESSION["user_id"])): ?>
-                <?php if ($_SESSION["role"] === "admin"): ?>
-                    <li><a href="../php/myfiles.php">My files</a></li>
-                <?php else: ?>
-                    <li><a href="../php/files.php">My files</a></li>
-                <?php endif; ?>
-            <?php endif; ?>
+            <?php
+            //is user logged in?//
+            if (isset($_SESSION["user_id"])) {
+
+                //show admin dashboard//
+                if ($_SESSION["role"] === "admin") {
+                    echo '<li><a href="../php/myfiles.php">My files</a></li>';
+
+                    //show user dashboard//
+                } else {
+                    echo '<li><a href="../php/files.php">My files</a></li>';
+                }
+            }
+            ?>
 
             <li>About me</li>
-            <?php if (isset($_SESSION["user_id"])): ?>
-                <li class="loginButton">
+
+            <?php
+            //login and logout//
+            if (isset($_SESSION["user_id"])) {
+                echo '<li class="loginButton">
                     <a href="../php/logout.php">Log out</a>
-                </li>
-            <?php else: ?>
-                <li class="loginButton">
+                </li>';
+            } else {
+                echo '<li class="loginButton">
                     <a href="../html/login.html">Log in</a>
-                </li>
-            <?php endif; ?>
+                </li>';
+            }
+            ?>
+
         </ul>
     </header>
     <div class="introductionContainer">

@@ -12,21 +12,13 @@ if ($_SESSION["role"] !== "admin") {
 
 require_once "db.php";
 if (!$dbHandler) {
-    try {
-        $dbHandler = new PDO(
-            "mysql:host=localhost;dbname=portfoliousers;charset=utf8",
-            "root",
-            "qwerty"
-        );
-        $dbHandler->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    } catch (PDOException $e) {
-        die("Database connection failed: " . $e->getMessage());
-    }
+    exit("Database connection failed:.");
 }
+
 
 $stmt = $dbHandler->prepare("SELECT id, email FROM users WHERE role != 'admin'");
 $stmt->execute();
-$visitors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$visitors = $stmt->fetchAll(PDO::FETCH_ASSOC); //fetch assoc will return results as an associativie array
 
 $stmt = $dbHandler->prepare("SELECT id, name FROM years");
 $stmt->execute();
@@ -34,6 +26,7 @@ $years = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $message = "";
 
+//file uploader//
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
     $maxSize = 3 * 1024 * 1024;
 
@@ -61,15 +54,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
         if ($fileError !== 0) {
             $message = "Upload error.";
         } elseif ($fileSize > $maxSize) {
+
             $message = "File too large (max 3MB).";
         } else {
+
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mimeType = finfo_file($finfo, $fileTmp);
             if (!in_array($mimeType, $allowedTypes)) {
                 $message = "Invalid file type. Allowed: PDF, Word, Excel";
             } else {
 
-                $newFileName = time() . "_" . $fileName;
+                $newFileName = basename($fileName);
 
                 if (move_uploaded_file($fileTmp, "upload/" . $fileName)) {
 
@@ -78,11 +73,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
                          VALUES (:filename, :title, :description, :user, :year)"
                     );
 
-                    $stmt->bindParam(":filename", $fileName, PDO::PARAM_STR);
-                    $stmt->bindParam(":title", $title, PDO::PARAM_STR);
-                    $stmt->bindParam(":description", $description, PDO::PARAM_STR);
-                    $stmt->bindParam(":user", $_SESSION["user_id"], PDO::PARAM_INT); //who uploaded file?
-                    $stmt->bindParam(":year", $yearId, PDO::PARAM_INT);
+                    $stmt->bindParam(":filename", $fileName);
+                    $stmt->bindParam(":title", $title);
+                    $stmt->bindParam(":description", $description);
+                    $stmt->bindParam(":user", $_SESSION["user_id"]); //who uploaded file?
+                    $stmt->bindParam(":year", $yearId);
 
                     $stmt->execute();
                     $fileId = $dbHandler->lastInsertId();
@@ -93,8 +88,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
                                 "INSERT INTO file_access (file_id, user_id)
                                  VALUES (:file, :user)"
                             );
-                            $stmt->bindParam(":file", $fileId, PDO::PARAM_INT);
-                            $stmt->bindParam(":user", $visitorId, PDO::PARAM_INT);
+                            $stmt->bindParam(":file", $fileId);
+                            $stmt->bindParam(":user", $visitorId);
                             $stmt->execute();
                         }
                     }

@@ -8,43 +8,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $msg[] = "Invalid e-mail address.";
     }
 
-    if (!$pass = filter_input(INPUT_POST, "password")) {
+    if (!$pass = filter_input(INPUT_POST, "password", FILTER_SANITIZE_FULL_SPECIAL_CHARS)) {
         $msg[] = "Please provide a password";
     }
 
-    if (count($msg) == 0) {
+    if (empty($msg)) {
 
         require_once("db.php");
 
-        if ($dbHandler) {
-            try {
-
-                $stmt = $dbHandler->prepare(
-                    "SELECT id, password_hash, role
-                    FROM users
-                    WHERE email = :email"
-                );
-
-                $stmt->bindParam(":email", $email,  PDO::PARAM_STR);
-                $stmt->execute();
-            } catch (Exception $ex) {
-                printError($ex);
-            }
+        if (!$dbHandler) {
+            exit("Database connection failed.");
         }
 
-        if ($stmt && $stmt->rowCount() == 1) {
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $dbHandler->prepare(
+            "SELECT
+            id, password_hash, role
+            FROM users
+            WHERE email = :email"
+        );
 
-            if (password_verify($pass, $results[0]["password_hash"])) {
+        $stmt->execute([
+            ":email" => $email
+        ]);
 
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        if ($user && password_verify($pass, $user["password_hash"])) {
 
-                $_SESSION["user_id"] = $results[0]["id"];
-                $_SESSION["role"] = $results[0]["role"];
+            $_SESSION["user_id"] = $user["id"];
+            $_SESSION["role"] = $user["role"];
 
-                header("Location: ../php/myportfolio.php");
-                exit;
-            }
+            header("Location: ../php/myportfolio.php");
+            exit;
         } else {
             $msg[] = "Invalid e-mail or password.";
         }
