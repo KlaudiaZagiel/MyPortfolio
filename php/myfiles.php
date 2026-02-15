@@ -28,9 +28,9 @@ $stmt = $dbHandler->prepare("SELECT id, email FROM users WHERE role != 'admin'")
 $stmt->execute();
 $visitors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$stmt = $dbHandler->prepare("SELECT id, name FROM modules");
+$stmt = $dbHandler->prepare("SELECT id, name FROM years");
 $stmt->execute();
-$modules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$years = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $message = "";
 
@@ -39,10 +39,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
 
     $title = filter_input(INPUT_POST, "title", FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     $description = filter_input(INPUT_POST, "description", FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    $moduleId = filter_input(INPUT_POST, "module_id", FILTER_VALIDATE_INT);
+    $yearId = filter_input(INPUT_POST, "year_id", FILTER_VALIDATE_INT);
 
-    if (!$moduleId) {
-        $message = "Please select a module";
+    if (!$yearId) {
+        $message = "Please select a year";
     } else {
 
         $allowedTypes = [
@@ -69,42 +69,39 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
                 $message = "Invalid file type. Allowed: PDF, Word, Excel";
             } else {
 
-                if (!file_exists("upload/" . $fileName)) {
+                $newFileName = time() . "_" . $fileName;
 
-                    if (move_uploaded_file($fileTmp, "upload/" . $fileName)) {
+                if (move_uploaded_file($fileTmp, "upload/" . $fileName)) {
 
-                        $stmt = $dbHandler->prepare(
-                            "INSERT INTO files (filename, title, description, uploaded_by, module_id)
-                         VALUES (:filename, :title, :description, :user, :module)"
-                        );
+                    $stmt = $dbHandler->prepare(
+                        "INSERT INTO files (filename, title, description, uploaded_by, year_id)
+                         VALUES (:filename, :title, :description, :user, :year)"
+                    );
 
-                        $stmt->bindParam(":filename", $fileName, PDO::PARAM_STR);
-                        $stmt->bindParam(":title", $title, PDO::PARAM_STR);
-                        $stmt->bindParam(":description", $description, PDO::PARAM_STR);
-                        $stmt->bindParam(":user", $_SESSION["user_id"], PDO::PARAM_INT); //who uploaded file?
-                        $stmt->bindParam(":module", $moduleId, PDO::PARAM_INT);
+                    $stmt->bindParam(":filename", $fileName, PDO::PARAM_STR);
+                    $stmt->bindParam(":title", $title, PDO::PARAM_STR);
+                    $stmt->bindParam(":description", $description, PDO::PARAM_STR);
+                    $stmt->bindParam(":user", $_SESSION["user_id"], PDO::PARAM_INT); //who uploaded file?
+                    $stmt->bindParam(":year", $yearId, PDO::PARAM_INT);
 
-                        $stmt->execute();
-                        $fileId = $dbHandler->lastInsertId();
+                    $stmt->execute();
+                    $fileId = $dbHandler->lastInsertId();
 
-                        if (!empty($_POST["access"])) {
-                            foreach ($_POST["access"] as $visitorId) {
-                                $stmt = $dbHandler->prepare(
-                                    "INSERT INTO file_access (file_id, user_id)
+                    if (!empty($_POST["access"])) {
+                        foreach ($_POST["access"] as $visitorId) {
+                            $stmt = $dbHandler->prepare(
+                                "INSERT INTO file_access (file_id, user_id)
                                  VALUES (:file, :user)"
-                                );
-                                $stmt->bindParam(":file", $fileId, PDO::PARAM_INT);
-                                $stmt->bindParam(":user", $visitorId, PDO::PARAM_INT);
-                                $stmt->execute();
-                            }
+                            );
+                            $stmt->bindParam(":file", $fileId, PDO::PARAM_INT);
+                            $stmt->bindParam(":user", $visitorId, PDO::PARAM_INT);
+                            $stmt->execute();
                         }
-
-                        $message = "File uploaded successfully.";
-                    } else {
-                        $message = "Could not move uploaded file.";
                     }
+
+                    $message = "File uploaded successfully.";
                 } else {
-                    $message = "File already exists.";
+                    $message = "Couldn't move uploaded file";
                 }
             }
         }
@@ -112,83 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
 }
 ?>
 
-<!-- // $message = "";
 
-// if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
-// $fileSize = (3 * 1024 * 1024); //3Mb
-
-// if ($_FILES["uploadedFile"]["error"] == 0) {
-
-// if ($_FILES["uploadedFile"]["size"] < $fileSize) { //uploadedFile comes from my html input name '' uploadedFile''
-    // $acceptedFileTypes=["image/gif", "image/jpg" , "image/jpeg" , "application/pdf" , "application/msword" , "application/vnd.ms-excel" , "application/vnd.ms-powerpoint" ];
-
-    // $fileinfo=finfo_open(FILEINFO_MIME_TYPE);
-    // $uploadedFileType=finfo_file($fileinfo, $_FILES["uploadedFile"]["tmp_name"]);
-
-    // if (in_array($uploadedFileType, $acceptedFileTypes)) {
-    // if (!file_exists("upload/" . $_FILES["uploadedFile"]["name"])) { //prevent overwiting existing file. if there is already file like that, stop upload
-
-    // if (move_uploaded_file($_FILES["uploadedFile"]["tmp_name"], "upload/" . $_FILES["uploadedFile"]["name"])) { //move uploaded file to "upload/" folder
-
-    // $stmt=$dbHandler->prepare(
-    // "INSERT INTO files (filename, title, description, uploaded_by)
-    // VALUES (:filename, :title, :description, :user)"
-    // );
-
-    // $stmt->execute([
-    // ":filename" => $_FILES["uploadedFile"]["name"],
-    // ":title" => $_POST["title"],
-    // ":description" => $_POST["description"],
-    // ":user" => $_SESSION["user_id"]
-    // ]);
-
-    // $fileId = $dbHandler->lastInsertId();
-
-    // if (!empty($_POST["access"])) {
-    // foreach ($_POST["access"] as $visitorId) {
-    // $stmt = $dbHandler->prepare(
-    // "INSERT INTO file_access (file_id, user_id)
-    // VALUES (:file, :user)"
-    // );
-    // $stmt->execute([
-    // ":file" => $fileId,
-    // ":user" => $visitorId
-    // ]);
-    // }
-    // }
-
-    // $message = "<div class='upload-details'>";
-        // $message .= "<p><strong>Upload: </strong> " . $_FILES["uploadedFile"]["name"] . "<br />";
-            // $message .= "
-        <p><strong>Type: </strong> " . $uploadedFileType . "<br />";
-            // $message .= "
-        <p><strong> Size: </strong> " . ($_FILES["uploadedFile"]["size"] / 1024) . "Kb<br />";
-            // $message .= "
-        <p><strong> Stored temporarily in: </strong> " . $_FILES["uploadedFile"]["tmp_name"] . "<br />";
-            // $message .= "
-        <p><strong> Stored permanently in: </strong> " . "upload/" . $_FILES["uploadedFile"]["name"];
-            // $message .= "
-        <p><strong>Uploaded file:</strong> " . htmlspecialchars($_FILES["uploadedFile"]["name"]) . "</p>";
-        // $message .= "
-    </div>";
-    // } else {
-    // $message .= "Something went wrong while uploading.";
-    // }
-    // } else {
-    // $message .= $_FILES["uploadedFile"]["name"] . " already exsists. ";
-    // }
-    // } else {
-    // $message .= "Invalid file type. File type must be: gif, jpg or jpeg.";
-    // }
-    // } else {
-    // $message .= "Invalid file size. File size must be less than " . $fileSize / 1024 / 1024 . "Mb.";
-    // }
-    // } else {
-    // $message .= "Error: " . $_FILES["uploadedFile"]["error"] . "<br />";
-    // $message .= "See <a href='https://www.php.net/manual/en/features.file-upload.errors.php' target='_BLANK'>PHP.net</a> for the explanation of the error messages.";
-    // }
-    // }
-    // ?>  -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -239,7 +160,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
                     <?php foreach ($visitors as $visitor) {
                     ?>
                         <label>
-                            <input type="checkbox" name="access[]" value=<?php echo $visitor['id']; ?>">
+                            <input type="checkbox" name="access[]" value="<?php echo $visitor['id']; ?>">
                             <?php echo $visitor['email']; ?>
                         </label>
                     <?php
@@ -248,13 +169,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES["uploadedFile"])) {
                 </div>
 
                 <div class="moduleBox">
-                    <h2>Select module</h2>
+                    <h2>Select Year</h2>
 
-                    <select name="module_id" required>
-                        <option value="">-- Choose module --</option>
-                        <?php foreach ($modules as $module) { ?>
-                            <option value="<?php echo $module['id']; ?>">
-                                <?php echo $module['name']; ?>
+                    <select name="year_id" required>
+                        <option value="">Choose year</option>
+                        <?php foreach ($years as $year) { ?>
+                            <option value="<?php echo $year['id']; ?>">
+                                <?php echo $year['name']; ?>
                             </option>
                         <?php } ?>
                     </select>

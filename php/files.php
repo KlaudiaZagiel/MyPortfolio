@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION["user_id"])) {
+if (!isset($_SESSION["user_id"])) {       //authentication. wo login, user can't access the content
     header("Location: ../html/login.html");
     exit;
 }
@@ -17,26 +17,54 @@ if (!$dbHandler) {
     );
 }
 
+//logged in user//
 $userId = $_SESSION["user_id"];
 $role = $_SESSION["role"];
 
-if ($role === "admin") {
-
-    $stmt = $dbHandler->query("SELECT * FROM files");
+//Check if year was selected//
+if (isset($_GET["year"])) {
+    $selectedYear = (int)$_GET["year"];
 } else {
-
-    $stmt = $dbHandler->prepare(
-        "SELECT f.*
-         FROM files f
-         JOIN file_access fa ON f.id = fa.file_id
-         WHERE fa.user_id = :user"
-    );
-    $stmt->execute([
-        ":user" => $userId
-    ]);
+    $selectedYear = null;
 }
 
-$files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+//Folder view//
+$stmt = $dbHandler->query("SELECT * FROM years");
+$years = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$files = [];
+
+//Who can view this file//
+if ($selectedYear !== null) {
+
+    if ($role === "admin") { //show all files from selected year, i have  full access
+
+        $sql = "SELECT 
+        files.id, files.filename, files.title, files.description, files.uploaded_by, files.year_id,
+        years.name AS year_name
+        FROM files
+        INNER JOIN years
+        ON files.year_id = years.id
+        WHERE files.year_id = $selectedYear
+        ";
+
+        $stmt = $dbHandler->query($sql);
+    } else {
+        $sql = "SELECT 
+    files.id, files.filename, files.title, files.description, files.uploaded_by, files.year_id, 
+    years.name AS year_name
+    FROM  files
+    INNER JOIN years
+    ON files.year_id = years.id
+    INNER JOIN file_access
+    ON files.id = file_access.file_id
+    WHERE file_access.user_id = $userId
+    AND files.year_id = $selectedYear
+    ";
+        $stmt = $dbHandler->query($sql);
+    }
+    $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
 
 <!DOCTYPE html>
@@ -61,18 +89,27 @@ $files = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </ul>
     </header>
 
-    <h1>Your files</h1>
+    <h1>Your Files</h1>
 
     <div class="fileuploadContainer">
         <div class="fileuploadBox">
-            <?php if (empty($files)) {
-            ?>
-                <p>No files available.</p>
+
+            <!-- Years-->
+            <h2>Select Year</h2>
+
+            <div class="yearFolders">
+                <?php foreach ($years as $year) { ?>
+                    <a href="files.php?year=<?php echo $year['id']; ?>">
+                        <div class="yearCard">
+                            <?php echo htmlspecialchars($year['name']); ?>
+                        </div>
+                    </a>
+                <?php } ?>
+            </div>
+
+            <!-- Files-->
             <?php
-            }
-
             foreach ($files as $file) {
-
             ?>
                 <div class="fileCard">
                     <h3><?= htmlspecialchars($file["title"]) ?></h3>
